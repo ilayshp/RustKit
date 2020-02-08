@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate rustkit_clang_sys as clang;
+extern crate clang_sys as clang;
 #[macro_use]
 extern crate syn;
 #[macro_use]
@@ -372,7 +372,8 @@ impl Type {
     pub fn is_nonnull(&self) -> bool {
         match self {
             Type::Pointer(_, nonnull, _) => *nonnull,
-            _ => unreachable!(),
+            Type::Void => true,
+            _ => { println!("is_nonnull {:?}", self); unreachable!()},
         }
     }
 
@@ -629,7 +630,7 @@ impl MethodDecl {
         }
         let initializer = self.consumes_self && self.rustname.starts_with("init");
         let mname = if initializer {
-            self.rustname.replacen("init", "new", 1)
+            self.rustname.replacen("init", "new_init", 1)
         } else {
             self.rustname.clone()
         };
@@ -683,10 +684,12 @@ impl MethodDecl {
                 });
             }
         } else if self.inter_ptr {
-            if self.retty.is_nonnull() {
-                finish.push(parse_quote!{
-                    let _ret = &*_ret;
-                });
+            if self.retty == Type::Void {
+                // do nothing
+            } else if self.retty.is_nonnull() {
+                    finish.push(parse_quote!{
+                        let _ret = &*_ret;
+                    });
             } else {
                 finish.push(parse_quote!{
                     let _ret = if _ret.is_null() {
@@ -1134,6 +1137,7 @@ pub fn bind_framework(
         "-fobjc-abi-version=2",
         &framework_include,
         &system_include_path,
+        "-I/usr/local/Cellar/llvm/9.0.1/lib/clang/9.0.1/include",
         include_path.to_str().unwrap(),
     ];
     if framework_name == "IOSurface" {
@@ -1167,13 +1171,18 @@ pub fn bind_file(
         &framework_include,
         &system_include_path,
         header_path.to_str().unwrap(),
+        "-I/usr/local/Cellar/llvm/9.0.1/lib/clang/9.0.1/include",
+        "-include",
+        "Kernel/sys/types.h"
     ];
+    // -include {}/usr/include/simd/base.h", sdk_path_str, 
     let tu = idx.parse_tu(&args).unwrap();
     let mut out_path = out_dir.to_owned();
     out_path.push(&format!("{}.rs", header_path.file_stem().unwrap().to_str().unwrap()));
     bind_tu(&tu, &header_path, None, &out_path);
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub fn bind_tu(
     tu: &walker::TranslationUnit,
     base_path: &Path,
@@ -1439,6 +1448,7 @@ pub fn bind_tu(
     deps
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn gen_file(
     decls: &HashMap<String, ItemDecl>,
     declnames: &[String],
@@ -1536,9 +1546,11 @@ fn gen_file(
                     if let Some(comp) = name.iter().last() {
                         deps.insert(comp.to_owned());
                     }
+                    if d.src().ends_with("xpc_type_s") {
+                        None } else {
                     Some(parse_quote!{
                         use #path;
-                    })
+                    }) }
                 }
             }
             None => {

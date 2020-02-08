@@ -306,6 +306,9 @@ pub enum CursorKind {
     FriendDecl,
     /// Only produced by `libclang` 3.7 and later.
     OverloadCandidate,
+    /// Clang 9.0 ? 
+    WarnUnusedResultAttr,
+    AlignedAttr,
 }
 
 impl CursorKind {
@@ -581,7 +584,9 @@ impl CursorKind {
             CXCursor_StaticAssert => CursorKind::StaticAssert,
             CXCursor_FriendDecl => CursorKind::FriendDecl,
             CXCursor_OverloadCandidate => CursorKind::OverloadCandidate,
-            _ => unreachable!(),
+            440 => CursorKind::WarnUnusedResultAttr,
+            441 => CursorKind::AlignedAttr,
+            _ => {println!("Unhandled cursor, e = {:?}", e); unreachable!()},
         }
     }
 }

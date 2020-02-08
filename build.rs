@@ -23,8 +23,9 @@ fn bind_system_header(sdk_root: &Path, header: &str, out_dir: &Path, top: &mut F
 fn main () {
     let out_dir = env::var("OUT_DIR").unwrap();
     let out_dir = Path::new(&out_dir);
-    let sdk_root = Path::new("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk");
-    let frameworks = vec!["AVKit", "AppKit", "Foundation"];
+    let sdk_root = Path::new("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk");
+    //let frameworks = vec!["AVKit", "AppKit", "Foundation"];
+    let frameworks = vec!["Foundation", "CoreAudio"];
     let top_path = out_dir.join("top.rs");
     let mut top = File::create(&top_path).unwrap();
     bind_system_header(&sdk_root, "objc/NSObject.h", &out_dir, &mut top);
@@ -32,7 +33,8 @@ fn main () {
     bind_system_header(&sdk_root, "sys/acl.h", &out_dir, &mut top);
     bind_system_header(&sdk_root, "hfs/hfs_unistr.h", &out_dir, &mut top);
     bind_system_header(&sdk_root, "mach/message.h", &out_dir, &mut top);
-    bind_system_header(&sdk_root, "simd/types.h", &out_dir, &mut top);
+    //bind_system_header(&sdk_root, "xpc/xpc.h", &out_dir, &mut top);
+    //bind_system_header(&sdk_root, "simd/types.h", &out_dir, &mut top);
     let mut done: HashSet<String> = HashSet::new();
     let mut deps: Vec<String> = frameworks.iter().map(|s| s.to_string()).collect();
     while let Some(f) = deps.pop() {
