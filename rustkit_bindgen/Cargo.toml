@@ -8,6 +8,6 @@ license = "Apache-2.0/MIT"
 
 [dependencies]
 clang-sys = { version = "0.28", features = ["runtime", "clang_8_0"] }
-syn = { version = "0.14", features = ["full", "extra-traits"] }
+syn = { version = "0.15", features = ["full", "extra-traits"] }
 quote = "0.6"
 proc-macro2 = "0.4"

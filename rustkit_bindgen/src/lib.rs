@@ -20,6 +20,7 @@ use std::fs::File;
 use std::io::Write;
 use quote::ToTokens;
 use proc_macro2::{Ident, Span};
+use syn::parse::Parser;
 
 fn cursor_dump(c: &walker::Cursor, p: Option<&str>) {
     let mut prefix = "  ".to_owned();
@@ -206,7 +207,7 @@ impl Type {
                 let mut f = parse_quote!{ extern fn (#(#args),*) -> #retty };
                 if let syn::Type::BareFn(syn::TypeBareFn { ref mut variadic, .. }) = f {
                     if *var {
-                        *variadic = Some(syn::token::Dot3::new(Span::call_site()));
+                        *variadic = Some(Token![...](Span::call_site()));
                     }
                 } else {
                     panic!("Bare function not generated???");
@@ -1565,6 +1566,7 @@ fn gen_file(
     for m in mods {
         let m = Ident::new(&m, Span::call_site());
         ast.items.push(parse_quote!{
+            #[allow(non_snake_case)]
             pub mod #m;
         });
     }
@@ -1866,7 +1868,8 @@ fn gen_file(
             pub fn #name(#(#arg_name: #arg_ty),*) -> #retty;
         };
         if f.variadic {
-            fndecl.decl.variadic = Some(syn::token::Dot3::new(Span::call_site()));
+            fndecl.decl.variadic = Some(Token![...](Span::call_site()));
+            //fndecl.decl.variadic = Some(syn::token::Dot3::new(Span::call_site()));
         }
         Some(syn::ForeignItem::Fn(fndecl))
     }).collect();
@@ -1888,6 +1891,8 @@ fn gen_file(
     }
 
     let mut f = File::create(out_path).unwrap();
+    let attributes = syn::Attribute::parse_outer.parse_str("#[allow(non_snake_case)]").unwrap();
+    ast.attrs = attributes;
     f.write_fmt(format_args!("{}", ast.into_token_stream())).unwrap();
     f.flush().unwrap();
     std::process::Command::new("rustfmt").arg(out_path).status().unwrap();
