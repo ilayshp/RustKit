@@ -21,6 +21,7 @@ fn bind_system_header(sdk_root: &Path, header: &str, out_dir: &Path, top: &mut F
 }
 
 fn main () {
+    println!("cargo:rerun-if-changed=build.rs");
     let out_dir = env::var("OUT_DIR").unwrap();
     let out_dir = Path::new(&out_dir);
     let sdk_root = Path::new("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk");
