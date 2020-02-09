@@ -1,3 +1,5 @@
+[![dependency status](https://deps.rs/repo/github/martijnberger/rustkit/status.svg)](https://deps.rs/repo/github/martijnberger/rustkit)
+
 # RustKit
 Fast and ergonomic Rust bindings for ObjC APIs
 
